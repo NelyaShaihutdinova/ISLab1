@@ -25,13 +25,10 @@ jobs:
         run: mkdir -p reports
 
       - name: Build project
-        run: mvn clean compile
+        run: mvn clean compile -DskipTests
 
-      - name: Run SpotBugs
-        run: mvn com.github.spotbugs:spotbugs-maven-plugin:check
-
-      - name: Spotbugs site compile
-        run: mvn clean compile site
+      - name: Run SpotBugs and generate HTML report
+        run: mvn clean verify site -DskipTests
 
       - name: Upload SpotBugs reports
         uses: actions/upload-artifact@v4
@@ -40,15 +37,16 @@ jobs:
           path: target/site/spotbugs.html
           if-no-files-found: warn
 
-      - name: OWASP Dependency Check
-        uses: dependency-check/Dependency-Check_Action@main
-        env:
-          JAVA_HOME: /opt/jdk
+      - name: Run OWASP Dependency Check
+        run: |
+          mvn org.owasp:dependency-check-maven:check -DskipTests
+
+      - name: Upload Dependency Check Report
+        uses: actions/upload-artifact@v4
         with:
-          project: "secure-api"
-          path: "."
-          format: "HTML"
-          out: "reports"
+         name: dependency-check-report
+         path: target/dependency-check-report.html
+         retention-days: 30
 
       - name: Upload Security Reports
         uses: actions/upload-artifact@v4

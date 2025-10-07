@@ -46,7 +46,7 @@ public class AuthController {
 
     @PostMapping("/register")
     public ResponseEntity<?> registerUser(@Valid @RequestBody LoginRequest signUpRequest) {
-        User user = authService.registerUser(signUpRequest.getUsername(), signUpRequest.getPassword());
+        authService.registerUser(signUpRequest.getUsername(), signUpRequest.getPassword());
         return ResponseEntity.ok("User registered successfully!");
     }
 }
