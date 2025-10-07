@@ -2,12 +2,13 @@ name: Security Scan CI
 
 on:
   push:
-    branches: [ main, master ]
+    branches: [ "main" ]
   pull_request:
-    branches: [ main, master ]
+    branches: [ "main" ]
 
 jobs:
-  security-scan:
+  build-and-scan:
+    name: Build & Security Scan
     runs-on: ubuntu-latest
 
     steps:
@@ -19,10 +20,39 @@ jobs:
         with:
           java-version: '17'
           distribution: 'temurin'
-          cache: maven
 
-      - name: SAST - Run SpotBugs
-        run: mvn spotbugs:check
+      - name: Create reports directory
+        run: mkdir -p reports
 
-      - name: SCA - Run OWASP Dependency Check
-        run: mvn org.owasp:dependency-check-maven:check
+      - name: Build project
+        run: mvn clean compile
+
+      - name: Run SpotBugs
+        run: mvn com.github.spotbugs:spotbugs-maven-plugin:check
+
+      - name: Spotbugs site compile
+        run: mvn clean compile site
+
+      - name: Upload SpotBugs reports
+        uses: actions/upload-artifact@v4
+        with:
+          name: spotbugs-report
+          path: target/site/spotbugs.html
+          if-no-files-found: warn
+
+      - name: OWASP Dependency Check
+        uses: dependency-check/Dependency-Check_Action@main
+        env:
+          JAVA_HOME: /opt/jdk
+        with:
+          project: "secure-api"
+          path: "."
+          format: "HTML"
+          out: "reports"
+
+      - name: Upload Security Reports
+        uses: actions/upload-artifact@v4
+        with:
+          name: security-reports
+          path: reports/
+          retention-days: 30
