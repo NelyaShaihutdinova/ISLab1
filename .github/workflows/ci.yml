@@ -1,0 +1,28 @@
+name: Security Scan CI
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+
+jobs:
+  security-scan:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          cache: maven
+
+      - name: SAST - Run SpotBugs
+        run: mvn spotbugs:check
+
+      - name: SCA - Run OWASP Dependency Check
+        run: mvn org.owasp:dependency-check-maven:check
